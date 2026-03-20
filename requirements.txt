@@ -8,22 +8,12 @@ fastapi>=0.100.0
 uvicorn>=0.23.0
 python-multipart>=0.0.6
 
-# ── Speech-to-Text (Whisper) ──────────────────────────────────
-# Runs fully locally — no API key needed.
-# Uses 'tiny' model on production for low memory usage.
-openai-whisper
-
-# ── Audio Processing ──────────────────────────────────────────
-# pydub: convert browser audio (webm) to WAV for Whisper
-# audioop-lts: required for Python 3.13+ (audioop was removed from stdlib)
-# ffmpeg binary is pre-installed on Render — no extra step needed.
-pydub
-audioop-lts>=0.2.1
-
 # ── Text-to-Speech ────────────────────────────────────────────
 gTTS
 
-# ── AI / LLM (Groq — completely free tier) ───────────────────
+# ── AI / LLM + Whisper STT (Groq — completely free tier) ─────
+# Groq provides both LLM (Llama 3) and Whisper STT via cloud API.
+# No PyTorch or local model downloads needed — keeps memory tiny.
 groq
 
 # ── Environment variable management ──────────────────────────

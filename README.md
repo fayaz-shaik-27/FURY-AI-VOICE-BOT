@@ -21,7 +21,7 @@
 | Layer | Technology |
 |---|---|
 | **Backend** | FastAPI + Uvicorn |
-| **Speech-to-Text** | OpenAI Whisper (`tiny` model) |
+| **Speech-to-Text** | Groq Whisper API (cloud, zero local RAM) |
 | **AI / LLM** | Groq API (Llama 3) |
 | **Text-to-Speech** | gTTS |
 | **Frontend** | React + Vite |
