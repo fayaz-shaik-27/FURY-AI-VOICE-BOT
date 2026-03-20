@@ -40,7 +40,6 @@ graph LR
 ```
 Voice Automation/
 ├── api.py               # Optimized Monolith (serves UI + AI API)
-├── main.py              # Legacy Telegram Bot entry point
 ├── ai_handler.py        # Groq LLM logic & memory
 ├── speech_to_text.py    # Local Whisper (handles WebM/OGG)
 ├── text_to_speech.py    # gTTS synthesis
@@ -111,10 +110,6 @@ Deploy this project as a single **Web Service** on Render:
 
 ---
 
-## 📱 Voicemail Mode (Optional)
-This project still supports **Telegram Bot** mode for voicemail handling.
-- **Run**: `python main.py`
-- **Setup**: Forward your missed calls to the Telegram bot as described in the `/voicemails` section.
 
 ---
 
