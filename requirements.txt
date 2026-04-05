@@ -9,7 +9,7 @@ uvicorn>=0.23.0
 python-multipart>=0.0.6
 
 # ── Text-to-Speech ────────────────────────────────────────────
-gTTS
+edge-tts
 
 # ── AI / LLM + Whisper STT (Groq — completely free tier) ─────
 # Groq provides both LLM (Llama 3) and Whisper STT via cloud API.

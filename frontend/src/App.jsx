@@ -26,10 +26,10 @@ function VoiceWaveform({ active, color = '#8ab4f8' }) {
 function GeminiOrb({ state }) {
   // state: 'idle' | 'recording' | 'processing' | 'speaking'
   const gradients = {
-    idle:       ['#4285f4', '#9c27b0'],
-    recording:  ['#ea4335', '#f97316'],
+    idle: ['#4285f4', '#9c27b0'],
+    recording: ['#ea4335', '#f97316'],
     processing: ['#34a853', '#4285f4'],
-    speaking:   ['#8ab4f8', '#c084fc'],
+    speaking: ['#8ab4f8', '#c084fc'],
   };
   const [c1, c2] = gradients[state] || gradients.idle;
 
@@ -50,8 +50,8 @@ function GeminiOrb({ state }) {
       >
         {state === 'idle' && (
           <svg width="48" height="48" viewBox="0 0 24 24" fill="white">
-            <path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6z"/>
-            <path d="M17 12c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-2.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            <path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6z" />
+            <path d="M17 12c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-2.08c3.39-.49 6-3.39 6-6.92h-2z" />
           </svg>
         )}
         {state === 'recording' && (
@@ -64,7 +64,7 @@ function GeminiOrb({ state }) {
         )}
         {state === 'speaking' && (
           <svg width="48" height="48" viewBox="0 0 24 24" fill="white">
-            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
           </svg>
         )}
       </div>
@@ -102,9 +102,9 @@ export default function App() {
   const [error, setError] = useState('');
 
   const mediaRecorderRef = useRef(null);
-  const audioChunksRef   = useRef([]);
-  const chatEndRef        = useRef(null);
-  const audioRef          = useRef(null);
+  const audioChunksRef = useRef([]);
+  const chatEndRef = useRef(null);
+  const audioRef = useRef(null);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
@@ -163,7 +163,7 @@ export default function App() {
       setHistory((prev) => [
         ...prev,
         { role: 'user', text: data.transcript },
-        { role: 'ai',   text: data.ai_text    },
+        { role: 'ai', text: data.ai_text },
       ]);
 
       // Play audio response
@@ -227,7 +227,7 @@ export default function App() {
         <nav className="header-nav">
           <button className="nav-btn" onClick={clearHistory} title="Clear chat">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
             </svg>
             Clear
           </button>

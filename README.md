@@ -79,7 +79,7 @@ Visit: **[http://localhost:5173](http://localhost:5173)**
    ```
 5. Add **Environment Variables**:
    - `GROQ_API_KEY` = your key from [console.groq.com](https://console.groq.com)
-   - `WHISPER_MODEL` = `tiny`
+   - `WHISPER_MODEL` = `whisper-large-v3-turbo`
    - `ASSISTANT_NAME` = `Fury AI`
 
 ---

@@ -98,7 +98,7 @@ async def process_voice(file: UploadFile = File(...)):
         logger.info(f"[{session_id}] AI reply: {ai_text[:80]}")
 
         # ── 4. Text → Speech ──────────────────────────────────────────────────
-        ogg_path = tts.synthesize(ai_text)
+        ogg_path = await tts.synthesize(ai_text)
         if not ogg_path or not os.path.exists(ogg_path):
             raise HTTPException(status_code=500, detail="TTS synthesis failed")
 

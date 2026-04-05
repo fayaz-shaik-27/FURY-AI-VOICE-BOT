@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 #  Groq client – uses GROQ_API_KEY from .env automatically
 # ──────────────────────────────────────────────────────────────
 _client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-_MODEL = os.getenv("GROQ_MODEL", "llama3-8b-8192")
+_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 _ASSISTANT_NAME = os.getenv("ASSISTANT_NAME", "Fury AI")
 
 # ──────────────────────────────────────────────────────────────
@@ -164,7 +164,7 @@ def generate_response(user_id: str | int, user_text: str) -> str:
         response = _client.chat.completions.create(
             model=_MODEL,
             messages=messages,
-            max_tokens=300,       # Keep responses concise for voice
+            max_tokens=150,       # Short = faster + better for voice
             temperature=0.75,     # Balanced creativity vs. consistency
             top_p=0.9,
         )

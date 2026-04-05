@@ -2,25 +2,33 @@
 text_to_speech.py
 © 2026 Fayaz Ahmed Shaik. All rights reserved.
 ─────────────────
-Converts text into an MP3 audio file using Google Text-to-Speech (gTTS).
+Converts text into an MP3 audio file using Microsoft Edge TTS (edge-tts).
+Supports native speed control and produces high-quality neural voices.
 No pydub or ffmpeg needed — modern browsers play MP3 natively.
 
 Flow:
-  text  →  gTTS generates .mp3  →  base64 encoded  →  browser plays it
+  text  →  edge-tts generates .mp3  →  base64 encoded  →  browser plays it
 """
 
 import os
 import logging
 import hashlib
-from gtts import gTTS
+import edge_tts
 
 logger = logging.getLogger(__name__)
 
 # ──────────────────────────────────────────────────────────────
-#  Directory for temporary audio output files.
+#  Configuration
 # ──────────────────────────────────────────────────────────────
-_AUDIO_DIR = os.path.join(os.path.dirname(__file__), "audio_output")
+_AUDIO_DIR  = os.path.join(os.path.dirname(__file__), "audio_output")
 os.makedirs(_AUDIO_DIR, exist_ok=True)
+
+# Voice to use — Microsoft Aria is clear and natural-sounding
+# Full list: run `edge-tts --list-voices` in terminal
+_VOICE      = os.getenv("TTS_VOICE", "en-US-AriaNeural")
+
+# Speed: "+0%" = normal, "+20%" = 20% faster, "+40%" = noticeably faster
+_RATE       = os.getenv("TTS_RATE", "+30%")
 
 
 def _unique_path(text: str) -> str:
@@ -29,14 +37,14 @@ def _unique_path(text: str) -> str:
     return os.path.join(_AUDIO_DIR, f"response_{text_hash}.mp3")
 
 
-def synthesize(text: str, lang: str = "en") -> str | None:
+async def synthesize(text: str, lang: str = "en") -> str | None:
     """
-    Converts text to an MP3 file using gTTS.
-    Browsers natively support MP3 — no conversion needed.
+    Converts text to an MP3 file using edge-tts.
+    Must be awaited — compatible with FastAPI's async event loop.
 
     Args:
         text: The text to synthesize.
-        lang: Language code (default 'en' for English).
+        lang: Unused (kept for API compatibility).
 
     Returns:
         Absolute path to the .mp3 file, or None on failure.
@@ -44,8 +52,8 @@ def synthesize(text: str, lang: str = "en") -> str | None:
     try:
         mp3_path = _unique_path(text)
         logger.info(f"Synthesizing TTS for text: '{text[:60]}...'")
-        tts = gTTS(text=text, lang=lang, slow=False)
-        tts.save(mp3_path)
+        communicate = edge_tts.Communicate(text, _VOICE, rate=_RATE)
+        await communicate.save(mp3_path)
         logger.debug(f"MP3 saved: {mp3_path}")
         return mp3_path
 
