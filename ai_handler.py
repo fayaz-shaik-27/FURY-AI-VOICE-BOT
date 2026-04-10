@@ -98,67 +98,91 @@ def detect_intent(text: str) -> str:
 #  Memory helpers
 # ──────────────────────────────────────────────────────────────
 
-def get_history(user_id: str | int) -> list[dict]:
-    """Returns the stored conversation history for a user."""
-    return _memory[user_id]
+def get_history(session_id: str) -> list[dict]:
+    """Returns the stored conversation history for a specific session."""
+    return _memory[session_id]
 
 
-def add_to_history(user_id: str | int, role: str, content: str) -> None:
+def add_to_history(session_id: str, role: str, content: str) -> None:
     """
-    Appends a message to the user's history and trims older messages
-    to stay within the _MAX_HISTORY_PAIRS limit.
+    Appends a message to the session's history and trims older messages.
     """
-    _memory[user_id].append({"role": role, "content": content})
+    _memory[session_id].append({"role": role, "content": content})
 
     # Trim: keep only the most recent N exchanges (2 msgs per exchange)
     max_messages = _MAX_HISTORY_PAIRS * 2
-    if len(_memory[user_id]) > max_messages:
-        _memory[user_id] = _memory[user_id][-max_messages:]
+    if len(_memory[session_id]) > max_messages:
+        _memory[session_id] = _memory[session_id][-max_messages:]
 
 
-def clear_history(user_id: str | int) -> None:
-    """Wipes conversation memory for a user. Useful for /reset command."""
-    _memory[user_id] = []
-    logger.info(f"Memory cleared for user {user_id}.")
+def load_history_to_memory(session_id: str, messages: list[dict]) -> None:
+    """
+    Pre-populates the in-memory context from the database history.
+    Messages should be a list of {"role": "user"|"assistant", "message": "..."}.
+    """
+    if session_id in _memory and len(_memory[session_id]) > 0:
+        return # Already loaded or active
+    
+    formatted = []
+    for m in messages:
+        # Convert DB 'assistant' role to AI handler's 'assistant'
+        role = 'assistant' if m['role'] in ['assistant', 'ai'] else 'user'
+        formatted.append({"role": role, "content": m['message']})
+    
+    _memory[session_id] = formatted
+    logger.info(f"Loaded {len(formatted)} messages into memory for session {session_id}")
+
+
+def clear_history(session_id: str) -> None:
+    """Wipes conversation memory for a session."""
+    _memory[session_id] = []
+    logger.info(f"Memory cleared for session {session_id}.")
+
+
+def generate_session_title(user_text: str) -> str:
+    """
+    Generates a very short (3-5 word) title for the conversation based on the first input.
+    """
+    try:
+        prompt = f"Generate a 3 to 4 word title for a conversation that starts with: '{user_text}'. Return ONLY the title, no quotes or punctuation."
+        response = _client.chat.completions.create(
+            model=_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=20,
+            temperature=0.5
+        )
+        title = response.choices[0].message.content.strip()
+        # Clean up in case LLM added quotes
+        title = title.replace('"', '').replace("'", "")
+        return title
+    except Exception as e:
+        logger.error(f"Title generation failed: {e}")
+        return "New Conversation"
 
 
 # ──────────────────────────────────────────────────────────────
 #  Main AI response function
 # ──────────────────────────────────────────────────────────────
 
-def generate_response(user_id: str | int, user_text: str) -> str:
+def generate_response(session_id: str, user_text: str) -> str:
     """
     Generates an AI response using Groq LLM, with full conversation memory.
-
-    Steps:
-      1. Detect user intent (for logging/future routing)
-      2. Add user message to memory
-      3. Build message list: system + history
-      4. Call Groq API
-      5. Save assistant response to memory
-      6. Return the response text
-
-    Args:
-        user_id: Telegram user ID (used as memory key).
-        user_text: Transcribed speech from the user.
-
-    Returns:
-        AI-generated response string.
+    Now keyed by session_id instead of user_id.
     """
     intent = detect_intent(user_text)
-    logger.info(f"User {user_id} | Intent: {intent} | Input: '{user_text[:80]}'")
+    logger.info(f"Session {session_id} | Intent: {intent} | Input: '{user_text[:80]}'")
 
     if intent == "creator":
         creator_reply = "My creator is Fayaz Ahmed, His screen name is Fury So he named me Fury"
-        add_to_history(user_id, "user", user_text)
-        add_to_history(user_id, "assistant", creator_reply)
+        add_to_history(session_id, "user", user_text)
+        add_to_history(session_id, "assistant", creator_reply)
         return creator_reply
 
     # Store user's message in memory
-    add_to_history(user_id, "user", user_text)
+    add_to_history(session_id, "user", user_text)
 
     # Build the full message list for the API call
-    messages = [{"role": "system", "content": _SYSTEM_PROMPT}] + get_history(user_id)
+    messages = [{"role": "system", "content": _SYSTEM_PROMPT}] + get_history(session_id)
 
     try:
         response = _client.chat.completions.create(
@@ -170,14 +194,14 @@ def generate_response(user_id: str | int, user_text: str) -> str:
         )
 
         reply = response.choices[0].message.content.strip()
-        logger.info(f"AI reply for user {user_id}: '{reply[:80]}'")
+        logger.info(f"AI reply for session {session_id}: '{reply[:80]}'")
 
         # Store assistant's reply in memory for next turn
-        add_to_history(user_id, "assistant", reply)
+        add_to_history(session_id, "assistant", reply)
 
         return reply
 
     except Exception as e:
-        logger.error(f"LLM call failed for user {user_id}: {e}", exc_info=True)
+        logger.error(f"LLM call failed for session {session_id}: {e}", exc_info=True)
         # Friendly fallback so the bot doesn't go silent on errors
         return "I'm sorry, I ran into a little hiccup. Could you try saying that again?"
