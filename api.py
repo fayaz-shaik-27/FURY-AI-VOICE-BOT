@@ -94,14 +94,32 @@ async def signup(body: AuthRequest):
     to prevent premature account creation.
     """
     try:
+        # Check if user already exists in Supabase
+        # We try to silent sign-up or check if email is registered.
+        # Since we use Step 2 for creation, we can't easily check without admin keys,
+        # but we can try a silentsignup attempt or a check in our profiles/history if one exists.
+        # BEST APPROACH: Move Supabase check to Step 1.
         
-        # Generate 6-digit OTP
+        try:
+            # We use sign_up with the actual password to check if email is taken.
+            # If it succeeds, the account is created, but we still send OTP for email verification intent.
+            # If it fails with "already registered", we stop here.
+            auth.sign_up(body.email, body.password)
+        except Exception as e:
+            if "already signed up" in str(e).lower() or "already registered" in str(e).lower():
+                raise HTTPException(status_code=400, detail="An account with this email already exists. Please log in.")
+            # If it's a different error (like password too short), bubbles up.
+            raise HTTPException(status_code=400, detail=str(e))
+
+        # If we reach here, a new user was created in Supabase.
+        # Now we send OTP to confirm their intent/email.
         otp = f"{random.randint(100000, 999999)}"
         
-        # Store pending registration
+        # Store pending registration (now we just need to verify the OTP)
         auth._pending_registrations[body.email] = {
             "password": body.password,
-            "otp": otp
+            "otp": otp,
+            "supabase_created": True # Mark that account is already in Supabase
         }
         
         # Send Email
@@ -121,7 +139,7 @@ async def signup(body: AuthRequest):
 @app.post("/api/auth/verify-otp")
 async def verify_otp(body: OTPRequest):
     """
-    Step 2 of Signup: Verify OTP and create Supabase account.
+    Step 2 of Signup: Verify OTP and return the Supabase session created in Step 1.
     """
     pending = auth._pending_registrations.get(body.email)
     if not pending:
@@ -130,20 +148,22 @@ async def verify_otp(body: OTPRequest):
     if pending["otp"] != body.otp:
         raise HTTPException(status_code=400, detail="Invalid OTP code. Please try again.")
     
-    # OTP matches! Now create the actual Supabase account
+    # OTP matches! The account was already created in Step 1.
+    # We now sign in to get a fresh session or return the one we stored.
     try:
-        result = auth.sign_up(body.email, pending["password"])
+        # Sign in with the credentials we know are correct
+        result = auth.sign_in(body.email, pending["password"])
         
         # Clean up pending store
         del auth._pending_registrations[body.email]
         
-        # Send Welcome Email (Background-ish)
+        # Send Welcome Email
         em.send_welcome_email(body.email)
         
         return result
     except Exception as e:
-        logger.error(f"OTP Verification success but Supabase failed: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(f"OTP Verification success but login failed: {e}")
+        raise HTTPException(status_code=400, detail="Verification successful, but login failed. Please try logging in manually.")
 
 
 @app.post("/api/auth/login")
